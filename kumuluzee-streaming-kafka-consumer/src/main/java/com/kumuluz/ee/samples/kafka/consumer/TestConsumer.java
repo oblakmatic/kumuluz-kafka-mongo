@@ -33,6 +33,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.bson.Document;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import java.util.ArrayList;
 import java.util.Date;
@@ -53,13 +54,11 @@ public class TestConsumer {
 
     MongoCollection<Document> collection;
     MongoDatabase database;
-
+    MongoClient mongoClient = null;
 
     @PostConstruct
     private void init() {
         System.out.println("TEST1");
-
-        MongoClient mongoClient = null;
 
 
 
@@ -77,11 +76,6 @@ public class TestConsumer {
             }
         } catch (Exception exception) {
             log.log(Level.SEVERE, "An exception occurred when trying to establish connection to Mongo.", exception);
-
-        } finally {
-            if (mongoClient != null) {
-                //mongoClient.close();
-            }
 
         }
     }
@@ -123,5 +117,12 @@ public class TestConsumer {
         return messages.subList(messages.size() - 5, messages.size());
     }
 
+    @PreDestroy
+    private void close(){
+        if (mongoClient != null) {
+            mongoClient.close();
+        }
+
+    }
 
 }
