@@ -1,0 +1,16 @@
+kumuluzee:
+  server:
+    http:
+      port: 8010
+  streaming:
+    kafka:
+      consumer:
+        bootstrap-servers: localhost:9092
+        group-id: group1
+        enable-auto-commit: true
+        auto-commit-interval-ms: 1000
+        auto-offset-reset: earliest
+        key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  mongodb:
+    connection-url: mongodb://localhost:27017/local?serverSelectionTimeoutMS=2000
