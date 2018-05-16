@@ -35,6 +35,7 @@ import org.bson.Document;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,10 +48,67 @@ public class TestConsumer {
 
     private List<String> messages = new ArrayList<>();
 
+    private static final String DEFAULT_MONGO_URL = "mongodb://localhost:27017/local?serverSelectionTimeoutMS=2000";
 
+
+    MongoCollection<Document> collection;
+    MongoDatabase database;
+
+
+    @PostConstruct
+    private void init() {
+        System.out.println("TEST1");
+
+        MongoClient mongoClient = null;
+
+
+
+        try {
+            MongoClientURI mongoClientURI = new MongoClientURI(DEFAULT_MONGO_URL);
+            mongoClient = new MongoClient(mongoClientURI);
+
+            if (dbExists(mongoClient, mongoClientURI.getDatabase())) {
+                database = mongoClient.getDatabase("mydb");
+
+
+            } else {
+                log.severe("Mongo database not found.");
+
+            }
+        } catch (Exception exception) {
+            log.log(Level.SEVERE, "An exception occurred when trying to establish connection to Mongo.", exception);
+
+        } finally {
+            if (mongoClient != null) {
+                //mongoClient.close();
+            }
+
+        }
+    }
+
+    private Boolean dbExists(MongoClient mongoClient, String databaseName) {
+
+        if (mongoClient != null && databaseName != null) {
+
+            for (String s : mongoClient.listDatabaseNames()) {
+                if (s.equals(databaseName))
+                    return true;
+            }
+        }
+
+        return false;
+    }
 
     @StreamListener(topics = {"test"})
     public void onMessage(ConsumerRecord<String, String> record) {
+
+        Document doc = new Document("time", new Date(record.timestamp()))
+                .append("offset", record.offset())
+                .append("key", record.key())
+                .append("value", record.value());
+
+        collection = database.getCollection("test");
+        collection.insertOne(doc);
 
         log.info(String.format("Consumed message: offset = %d, key = %s, value = %s%n", record.offset(), record.key()
                 , record.value()));
